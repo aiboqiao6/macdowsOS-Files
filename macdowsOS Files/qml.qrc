@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/qt/qml/macdowsos files">
+        <file>main.qml</file>
+        <file>WindowControls.qml</file>
+        <file>FileListView.qml</file>
+        <file>SidebarList.qml</file>
+    </qresource>
+</RCC>
