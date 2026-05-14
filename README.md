@@ -1,1 +1,2 @@
 # macdowsOS Files
+使用Qt编写的仿macOS样式文件资源管理器
