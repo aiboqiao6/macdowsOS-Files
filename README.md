@@ -2,9 +2,7 @@
 
 # macdowsOS Files
 
-### Tahoe 风格的 Windows 文件浏览器
-
-一个面向 Windows 的 Qt Quick 文件浏览器原型：用 Finder 式信息架构浏览用户目录与磁盘分区，用轻量的深色玻璃界面承载日常文件查找。
+使用 C++/Qt Quick 编写的第三方 Windows 文件资源管理器
 
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?style=flat-square&logo=windows)
 ![Architecture](https://img.shields.io/badge/architecture-x64-5C2D91?style=flat-square)
