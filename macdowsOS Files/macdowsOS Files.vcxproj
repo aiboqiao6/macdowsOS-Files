@@ -99,6 +99,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="FileLocations.cpp" />
+    <QtMoc Include="FileLocations.h" />
     <None Include="FileListView.qml" />
     <None Include="SidebarList.qml" />
     <None Include="WindowControls.qml" />

@@ -1,233 +1,347 @@
-﻿//Qt
 import QtQuick 6.5
 import QtQuick.Window 6.5
 import QtQuick.Controls 6.5
-import Qt5Compat.GraphicalEffects
-import QtQuick.Layouts 6.5 // 修复Layout报错的核心导入
+import QtQuick.Layouts 6.5
 import Qt.labs.folderlistmodel 6.5
-// 应用程序主窗口，所有QML代码的根元素
+import macdowsOS.Locations 1.0
+
 Window {
     id: window
-
-    // 窗口启动时是否可见，必须设为true否则窗口不会显示
     visible: true
-
-    // 窗口初始宽度（像素）
-    width: 900
-    // 窗口初始高度（像素）
-    height: 600
-
-    // 窗口最小宽度，防止用户把窗口缩得太小
-    minimumWidth: 640
-    // 窗口最小高度
-    minimumHeight: 480
-
-    // 窗口标题，会显示在任务栏和Alt+Tab列表中
+    width: 1040
+    height: 680
+    minimumWidth: 760
+    minimumHeight: 500
     title: "macdowsOS Files"
-
-    // ==============================================
-    // 窗口标志组合（最核心的部分，新手最容易踩坑）
-    // ==============================================
-    // Qt.Window：告诉系统这是一个顶级应用窗口，必须加！否则任务栏不显示
-    // Qt.FramelessWindowHint：移除系统原生标题栏和边框
-    // Qt.WindowSystemMenuHint：保留任务栏右键菜单（关闭、最大化等）
-    // Qt.WindowMinMaxButtonsHint：保留系统对最小化/最大化的原生支持
+    color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint | Qt.WindowMinMaxButtonsHint
 
-    // 窗口背景色，这里设为纯白色，你可以改成任意颜色
-    color: "transparent"
-    //文件系统初始化
-    // 文件数据模型（内置）
-    FolderListModel {
-        id: myFileModel
-        folder: "file:///C:/"      // Windows 初始路径
-        showDirs: true
-        showFiles: true
-        nameFilters: ["*"]
-        sortField: FolderListModel.Name
-    }
-    // ==============================================
-    // 导航历史管理（纯 JS 对象）
-    // ==============================================
     QtObject {
         id: nav
-
-        // 历史记录栈
+        property string currentPath: FileLocations.homeUrl()
         property var historyStack: []
-        // 当前在栈中的位置
         property int historyIndex: -1
 
-        // 跳转到指定路径
-        function navigateTo(path) {
-            // 如果当前位置不在栈顶，截断前进历史
-            if (historyIndex < historyStack.length - 1)
-                historyStack = historyStack.slice(0, historyIndex + 1)
-            // 将新路径压入栈
-            historyStack.push(path)
-            historyIndex = historyStack.length - 1
-            // 更新模型文件夹
-            myFileModel.folder = path
+        function setCurrent(path) {
+            currentPath = path
+            sidebar.currentPath = path
         }
-
-        // 后退
+        function navigateTo(path, push) {
+            var target = FileLocations.normalizeFolder(path)
+            if (!target) return false
+            if (push === undefined) push = true
+            if (push) {
+                if (historyIndex < historyStack.length - 1)
+                    historyStack = historyStack.slice(0, historyIndex + 1)
+                if (historyStack.length === 0 || historyStack[historyStack.length - 1] !== target) {
+                    historyStack.push(target)
+                    historyIndex = historyStack.length - 1
+                }
+            }
+            setCurrent(target)
+            return true
+        }
         function goBack() {
             if (historyIndex > 0) {
                 historyIndex--
-                myFileModel.folder = historyStack[historyIndex]
+                setCurrent(historyStack[historyIndex])
             }
         }
-
-        // 前进
         function goForward() {
             if (historyIndex < historyStack.length - 1) {
                 historyIndex++
-                myFileModel.folder = historyStack[historyIndex]
+                setCurrent(historyStack[historyIndex])
             }
+        }
+        function goUp() {
+            var path = currentPath.replace("file:///", "")
+            var slash = path.lastIndexOf("/")
+            if (slash < 0) return
+            var parent = path.slice(0, slash + 1)
+            if (parent.length === 2 && parent[1] === ":") parent += "/"
+            navigateTo(FileLocations.normalizeFolder(parent), true)
         }
     }
 
-    // 初始化：将初始路径加入历史
-    Component.onCompleted: nav.navigateTo(myFileModel.folder)
+    FolderListModel {
+        id: myFileModel
+        folder: nav.currentPath
+        showDirs: true
+        showFiles: true
+        showHidden: false
+        nameFilters: ["*"]
+        sortField: FolderListModel.Name
+        sortCaseSensitive: false
+        sortReversed: false
+    }
 
     Rectangle {
         id: background
         anchors.fill: parent
-        radius: 23                 // 圆角半径，可自定义
-        color: "#212224"             // 窗口整体背景色（28,29,31）
-        //color: "transparent"
-        border {
-            color: "#424448"         // 边框颜色（66,68,72）
-            width: 1                 // 边框粗细
-        }
-        
-        //顶部拖动区域
-        MouseArea {
-            id: titleBarDragArea
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: 80                     // 可拖动区域高度，你可以改成任意值
-            cursorShape: Qt.OpenHandCursor // 鼠标移上去变成手型
+        radius: 23
+        color: "#212224"
+        border.color: "#424448"
+        border.width: 1
+        clip: true
 
-            onPressed: {
-                window.startSystemMove()   // 调用系统移动窗口功能
-            }
-        }
-        // 窗口容器
         RowLayout {
             anchors.fill: parent
+            anchors.margins: 6
             spacing: 0
 
             Rectangle {
                 id: leftPanel
-                Layout.preferredWidth: 280
+                Layout.preferredWidth: 250
                 Layout.fillHeight: true
-                //Layout.rightMargin: 16
-                Layout.leftMargin: 6
-                Layout.topMargin: 6
-                Layout.bottomMargin: 6
                 color: "#1C1D1F"
                 radius: 16
-                border { 
-                    color: "#424448"; 
-                    width: 1 
+                border.color: "#424448"
+                border.width: 1
+
+                MouseArea {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 46
+                    z: 0
+                    cursorShape: Qt.OpenHandCursor
+                    onPressed: window.startSystemMove()
                 }
 
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 13
-                    spacing: 15
+                    spacing: 12
+                    z: 1
 
-                    // 窗口控制按钮（红绿灯）
-                    WindowControls {
+                    RowLayout {
                         Layout.fillWidth: true
-                        onMinimizeClicked: window.showMinimized()
-                        onMaximizeClicked: {
-                            if (window.visibility === Window.Maximized)
-                                window.showNormal()
-                            else
-                                window.showMaximized()
+                        height: 34
+                        WindowControls {
+                            Layout.preferredWidth: 72
+                            onMinimizeClicked: window.showMinimized()
+                            onMaximizeClicked: window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized()
+                            onCloseClicked: window.close()
                         }
-                        onCloseClicked: window.close()
                     }
 
                     SidebarList {
+                        id: sidebar
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        sidebarModel: ListModel {
-                            ListElement { name: "桌面"; path: "file:///C:/Users/Public/Desktop" }
-                            ListElement { name: "文档"; path: "file:///C:/Users/Public/Documents" }
-                            ListElement { name: "下载"; path: "file:///C:/Users/Public/Downloads" }
-                            ListElement { name: "C:";    path: "file:///C:/" }
-                        }
-                        // 直接使用 path 参数
-                        onItemClicked: nav.navigateTo(path)
+                        model: FileLocations.sidebarModel
+                        currentPath: nav.currentPath
+                        onItemClicked: function(path) { nav.navigateTo(path, true) }
+                    }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: "#35383d" }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.leftMargin: 8
+                        Layout.rightMargin: 8
+                        spacing: 8
+                        Text { text: "\uE8B7"; color: "#73a8ee"; font.family: "Segoe Fluent Icons"; font.pixelSize: 15 }
+                        Text { Layout.fillWidth: true; text: myFileModel.count + " 个项目"; color: "#7e8794"; font.pixelSize: 11 }
+                        Text { text: FileLocations.labelForUrl(nav.currentPath); color: "#6e7887"; font.pixelSize: 11; elide: Text.ElideMiddle }
                     }
                 }
             }
-            //拖动
-            // ---------- 新增：可拖动的分割条 ----------
+
             Rectangle {
                 id: splitter
                 Layout.fillHeight: true
-                width: 4
-                color: "transparent" 
-                //color:"black"
-                // 透明，仅作为拖动热区
-
-                // 拖动时需要缓存的变量
+                width: 5
+                color: "transparent"
                 property real startX: 0
-                property real startWidth: 0
+                property real startWidth: 250
                 MouseArea {
                     anchors.fill: parent
-                    cursorShape: Qt.SplitHCursor    // 水平分割光标
-                    onPressed: {
-                        // 记录按下时的全局横坐标和左侧当前宽度
-                        splitter.startX = mouse.x
-                        splitter.startWidth = leftPanel.Layout.preferredWidth
-                    }
+                    cursorShape: Qt.SplitHCursor
+                    onPressed: { splitter.startX = mouse.x; splitter.startWidth = leftPanel.Layout.preferredWidth }
                     onPositionChanged: {
-                        // 计算移动距离：当前鼠标坐标 - 按下坐标
-                        var delta = mouse.x - splitter.startX
-                        // 新宽度 = 原宽度 + 移动距离，并限制最小值
-                        var newWidth = splitter.startWidth + delta
-                        if (newWidth < 100) newWidth = 100   // 最小100px
-                        if (newWidth > window.width * 0.8)   // 可选：最大不超过窗口80%
-                        newWidth = window.width * 0.8
-                        leftPanel.Layout.preferredWidth = newWidth
+                        var value = splitter.startWidth + mouse.x - splitter.startX
+                        leftPanel.Layout.preferredWidth = Math.max(190, Math.min(window.width * 0.45, value))
                     }
                 }
             }
-            // 右侧 空白区域 自动占满剩余宽度
+
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 color: "transparent"
-                //右侧文件列表
-                // 右侧文件列表
-                FileListView {
-                    anchors.fill: parent
-                    anchors.margins: 15
-                    fileModel: myFileModel
 
-                    // 直接使用隐式参数 path，无需箭头函数
-                    onFolderClicked: nav.navigateTo(path)
-                    onFileClicked: Qt.openUrlExternally(path)
+                MouseArea {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 46
+                    z: 0
+                    cursorShape: Qt.OpenHandCursor
+                    onPressed: window.startSystemMove()
+                }
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 14
+                    spacing: 12
+                    z: 1
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        height: 48
+                        spacing: 6
+
+                        Rectangle {
+                            id: navigationPill
+                            Layout.preferredWidth: 92
+                            Layout.minimumWidth: 92
+                            Layout.maximumWidth: 92
+                            Layout.preferredHeight: 40
+                            Layout.minimumHeight: 40
+                            Layout.maximumHeight: 40
+                            width: 92
+                            height: 40
+                            radius: 20
+                            color: "#303136"
+                            border.color: "#4d4f56"
+                            border.width: 1
+                            clip: true
+                            Item {
+                                width: 45
+                                height: parent.height
+                                opacity: nav.historyIndex > 0 ? 1 : 0.38
+                                Rectangle { anchors.fill: parent; color: backMouse.containsMouse && backMouse.enabled ? "#41434a" : "transparent" }
+                                Canvas {
+                                    anchors.fill: parent
+                                    onPaint: {
+                                        var context = getContext("2d")
+                                        context.clearRect(0, 0, width, height)
+                                        context.strokeStyle = "#eef0f4"
+                                        context.lineWidth = 1.9
+                                        context.lineCap = "round"
+                                        context.lineJoin = "round"
+                                        context.beginPath()
+                                        context.moveTo(width * 0.62, height * 0.35)
+                                        context.lineTo(width * 0.43, height * 0.5)
+                                        context.lineTo(width * 0.62, height * 0.65)
+                                        context.stroke()
+                                    }
+                                }
+                                MouseArea { id: backMouse; anchors.fill: parent; enabled: nav.historyIndex > 0; hoverEnabled: true; cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor; onClicked: nav.goBack() }
+                            }
+                            Rectangle { x: 45; y: 9; width: 1; height: parent.height - 18; color: "#55575e" }
+                            Item {
+                                x: 46
+                                width: 46
+                                height: parent.height
+                                opacity: nav.historyIndex < nav.historyStack.length - 1 ? 1 : 0.38
+                                Rectangle { anchors.fill: parent; color: forwardMouse.containsMouse && forwardMouse.enabled ? "#41434a" : "transparent" }
+                                Canvas {
+                                    anchors.fill: parent
+                                    onPaint: {
+                                        var context = getContext("2d")
+                                        context.clearRect(0, 0, width, height)
+                                        context.strokeStyle = "#eef0f4"
+                                        context.lineWidth = 1.9
+                                        context.lineCap = "round"
+                                        context.lineJoin = "round"
+                                        context.beginPath()
+                                        context.moveTo(width * 0.38, height * 0.35)
+                                        context.lineTo(width * 0.57, height * 0.5)
+                                        context.lineTo(width * 0.38, height * 0.65)
+                                        context.stroke()
+                                    }
+                                }
+                                MouseArea { id: forwardMouse; anchors.fill: parent; enabled: nav.historyIndex < nav.historyStack.length - 1; hoverEnabled: true; cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor; onClicked: nav.goForward() }
+                            }
+                        }
+                        Rectangle { width: 1; height: 22; color: "#3b3e43"; Layout.leftMargin: 5; Layout.rightMargin: 10 }
+                        Text { text: "\uE8B7"; color: "#8cb7ff"; font.family: "Segoe Fluent Icons"; font.pixelSize: 17 }
+                        Text {
+                            Layout.fillWidth: true
+                            text: FileLocations.labelForUrl(nav.currentPath)
+                            color: "#f0f2f5"
+                            font.pixelSize: 16
+                            font.weight: Font.DemiBold
+                            elide: Text.ElideMiddle
+                        }
+
+                        Rectangle {
+                            width: 76; height: 40; radius: 20
+                            color: "#303136"; border.color: "#4d4f56"; border.width: 1
+                            Row {
+                                anchors.fill: parent
+                                Item {
+                                    width: 37; height: parent.height
+                                    Rectangle { anchors.fill: parent; color: listModeMouse.containsMouse ? "#41434a" : "transparent" }
+                                    Text { anchors.centerIn: parent; text: "\uE8FD"; color: "#e7e9ef"; font.family: "Segoe Fluent Icons"; font.pixelSize: 16 }
+                                    MouseArea { id: listModeMouse; anchors.fill: parent; hoverEnabled: true; onClicked: myFileModel.sortField = FolderListModel.Name }
+                                }
+                                Rectangle { width: 1; height: 22; y: 9; color: "#55575e" }
+                                Item {
+                                    width: 37; height: parent.height
+                                    Rectangle { anchors.fill: parent; color: gridModeMouse.containsMouse ? "#41434a" : "transparent" }
+                                    Text { anchors.centerIn: parent; text: "\uE80A"; color: "#e7e9ef"; font.family: "Segoe Fluent Icons"; font.pixelSize: 16 }
+                                    MouseArea { id: gridModeMouse; anchors.fill: parent; hoverEnabled: true; onClicked: { } }
+                                }
+                            }
+                        }
+                        Repeater {
+                            model: ["\uE72D", "\uE8EC", "\uE712"]
+                            delegate: Rectangle {
+                                width: 38; height: 40; radius: 20
+                                color: actionMouse.containsMouse ? "#41434a" : "#303136"
+                                border.color: "#4d4f56"; border.width: 1
+                                Text { anchors.centerIn: parent; text: modelData; color: "#e7e9ef"; font.family: "Segoe Fluent Icons"; font.pixelSize: 16 }
+                                MouseArea { id: actionMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor }
+                            }
+                        }
+
+                        Rectangle {
+                            width: 220; height: 40; radius: 20
+                            color: "#303136"
+                            border.color: searchInput.activeFocus ? "#4c9bff" : "#4d4f56"
+                            border.width: 1
+                            Text { anchors.left: parent.left; anchors.leftMargin: 10; anchors.verticalCenter: parent.verticalCenter; text: "\uE721"; color: "#8e98a5"; font.family: "Segoe Fluent Icons"; font.pixelSize: 14 }
+                            TextInput {
+                                id: searchInput
+                                anchors.left: parent.left; anchors.leftMargin: 30; anchors.right: parent.right; anchors.rightMargin: 8
+                                height: parent.height
+                                verticalAlignment: TextInput.AlignVCenter
+                                color: "#e5e9ef"
+                                font.pixelSize: 12
+                                selectByMouse: true
+                                onTextChanged: myFileModel.nameFilters = text.length ? ["*" + text + "*"] : ["*"]
+                            }
+                            Text { anchors.left: parent.left; anchors.leftMargin: 31; anchors.verticalCenter: parent.verticalCenter; text: "搜索"; color: "#7e8794"; font.pixelSize: 12; visible: !searchInput.text }
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        height: 26
+                        spacing: 0
+                        Text { Layout.preferredWidth: 48; text: "" }
+                        Text { Layout.fillWidth: true; text: "名称"; color: "#858a95"; font.pixelSize: 11 }
+                        Text { Layout.preferredWidth: 110; text: "大小"; color: "#858a95"; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                        Text { Layout.preferredWidth: 180; text: "修改日期"; color: "#858a95"; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                    }
+
+                    FileListView {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        fileModel: myFileModel
+                        onFolderClicked: function(path) { nav.navigateTo(path, true) }
+                        onFileClicked: function(path) { Qt.openUrlExternally(path) }
+                    }
                 }
             }
         }
-        
-    }  
-   
-   // ==============================================
-   // 系统原生窗口边缘缩放（8个方向全覆盖）
-   // ==============================================
-   MouseArea { anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom; width: 8; cursorShape: Qt.SizeHorCursor; onPressed: window.startSystemResize(Qt.LeftEdge) }
-   MouseArea { anchors.right: parent.right; anchors.top: parent.top; anchors.bottom: parent.bottom; width: 8; cursorShape: Qt.SizeHorCursor; onPressed: window.startSystemResize(Qt.RightEdge) }
-   MouseArea { anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top; height: 8; cursorShape: Qt.SizeVerCursor; onPressed: window.startSystemResize(Qt.TopEdge) }
-   MouseArea { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; height: 8; cursorShape: Qt.SizeVerCursor; onPressed: window.startSystemResize(Qt.BottomEdge) }
-   MouseArea { anchors.left: parent.left; anchors.top: parent.top; width: 8; height: 8; cursorShape: Qt.SizeFDiagCursor; onPressed: window.startSystemResize(Qt.TopEdge | Qt.LeftEdge) }
-   MouseArea { anchors.right: parent.right; anchors.top: parent.top; width: 8; height: 8; cursorShape: Qt.SizeBDiagCursor; onPressed: window.startSystemResize(Qt.TopEdge | Qt.RightEdge) }
-   MouseArea { anchors.left: parent.left; anchors.bottom: parent.bottom; width: 8; height: 8; cursorShape: Qt.SizeBDiagCursor; onPressed: window.startSystemResize(Qt.BottomEdge | Qt.LeftEdge) }
-   MouseArea { anchors.right: parent.right; anchors.bottom: parent.bottom; width: 8; height: 8; cursorShape: Qt.SizeFDiagCursor; onPressed: window.startSystemResize(Qt.BottomEdge | Qt.RightEdge) }
+    }
+
+    Component.onCompleted: nav.navigateTo(FileLocations.homeUrl(), true)
+
+    MouseArea { anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom; width: 7; cursorShape: Qt.SizeHorCursor; onPressed: window.startSystemResize(Qt.LeftEdge) }
+    MouseArea { anchors.right: parent.right; anchors.top: parent.top; anchors.bottom: parent.bottom; width: 7; cursorShape: Qt.SizeHorCursor; onPressed: window.startSystemResize(Qt.RightEdge) }
+    MouseArea { anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top; height: 7; cursorShape: Qt.SizeVerCursor; onPressed: window.startSystemResize(Qt.TopEdge) }
+    MouseArea { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; height: 7; cursorShape: Qt.SizeVerCursor; onPressed: window.startSystemResize(Qt.BottomEdge) }
 }

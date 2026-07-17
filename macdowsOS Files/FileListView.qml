@@ -87,6 +87,9 @@ ListView {
             if (!targetPath || targetPath === "") {
                 targetPath = model.filePath
             }
+            if (typeof targetPath !== "string") {
+                targetPath = targetPath.toString()
+            }
             if (!targetPath || targetPath === "") {
                 console.warn("FileListView: 无法获取文件路径")
                 return

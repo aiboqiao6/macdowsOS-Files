@@ -26,6 +26,9 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FileLocations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <QtRcc Include="qml.qrc">
       <Filter>Resource Files</Filter>
     </QtRcc>
@@ -34,6 +37,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="FileLocations.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
     <None Include="WindowControls.qml">
       <Filter>Source Files</Filter>
     </None>
