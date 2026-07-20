@@ -103,6 +103,8 @@
     <ClCompile Include="FileIconProvider.cpp" />
     <ClInclude Include="FileIconProvider.h" />
     <QtMoc Include="FileLocations.h" />
+    <None Include="..\LICENSE" />
+    <None Include="..\README.md" />
     <None Include="FileListView.qml" />
     <None Include="SidebarList.qml" />
     <None Include="WindowControls.qml" />
