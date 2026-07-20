@@ -36,13 +36,13 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtInstall>6.11.1_msvc2022_64</QtInstall>
+    <QtInstall>C:\Qt\6.11.1\msvc2022_64</QtInstall>
     <QtModules>quick</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
     <QtQMLDebugEnable>true</QtQMLDebugEnable>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
-    <QtInstall>6.11.1_msvc2022_64</QtInstall>
+    <QtInstall>C:\Qt\6.11.1\msvc2022_64</QtInstall>
     <QtModules>quick</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
@@ -100,6 +100,8 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="FileLocations.cpp" />
+    <ClCompile Include="FileIconProvider.cpp" />
+    <ClInclude Include="FileIconProvider.h" />
     <QtMoc Include="FileLocations.h" />
     <None Include="FileListView.qml" />
     <None Include="SidebarList.qml" />

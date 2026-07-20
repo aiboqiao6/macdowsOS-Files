@@ -1,8 +1,25 @@
+<!-- QML sources and bundled assets compiled into the executable. -->
 <RCC>
     <qresource prefix="/qt/qml/macdowsos files">
         <file>main.qml</file>
         <file>WindowControls.qml</file>
         <file>FileListView.qml</file>
         <file>SidebarList.qml</file>
+        <file>LineIcon.qml</file>
+    </qresource>
+    <qresource prefix="/icons">
+        <file alias="home.png">assets/icons/home.png</file>
+        <file alias="desktop.png">assets/icons/desktop.png</file>
+        <file alias="documents.png">assets/icons/documents.png</file>
+        <file alias="downloads.png">assets/icons/downloads.png</file>
+        <file alias="pictures.png">assets/icons/pictures.png</file>
+        <file alias="music.png">assets/icons/music.png</file>
+        <file alias="videos.png">assets/icons/videos.png</file>
+        <file alias="drive.png">assets/icons/drive.png</file>
+        <file alias="folder.png">assets/icons/folder.png</file>
+        <file alias="file.png">assets/icons/file.png</file>
+        <file alias="trash.png">assets/icons/trash.png</file>
+        <file alias="entity-folder.png">assets/icons/entity-folder.png</file>
+        <file alias="entity-file.png">assets/icons/entity-file.png</file>
     </qresource>
 </RCC>

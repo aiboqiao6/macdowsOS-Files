@@ -1,10 +1,11 @@
-import QtQuick 6.5
+﻿import QtQuick 6.5
 import QtQuick.Window 6.5
 import QtQuick.Controls 6.5
 import QtQuick.Layouts 6.5
 import Qt.labs.folderlistmodel 6.5
 import macdowsOS.Locations 1.0
 
+/* Root window: navigation state is shared here and child components emit intent. */
 Window {
     id: window
     visible: true
@@ -16,6 +17,7 @@ Window {
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint | Qt.WindowMinMaxButtonsHint
 
+    // Shared navigation controller: current folder plus back/forward history.
     QtObject {
         id: nav
         property string currentPath: FileLocations.homeUrl()
@@ -63,6 +65,7 @@ Window {
         }
     }
 
+    // Qt's filesystem model supplies rows for the right-hand list.
     FolderListModel {
         id: myFileModel
         folder: nav.currentPath
@@ -75,6 +78,7 @@ Window {
         sortReversed: false
     }
 
+    // Window shell: transparent surface, rounded frame, and two panels.
     Rectangle {
         id: background
         anchors.fill: parent
@@ -89,6 +93,7 @@ Window {
             anchors.margins: 6
             spacing: 0
 
+            // Left panel: traffic lights, sidebar, and status footer.
             Rectangle {
                 id: leftPanel
                 Layout.preferredWidth: 250
@@ -139,13 +144,14 @@ Window {
                         Layout.leftMargin: 8
                         Layout.rightMargin: 8
                         spacing: 8
-                        Text { text: "\uE8B7"; color: "#73a8ee"; font.family: "Segoe Fluent Icons"; font.pixelSize: 15 }
-                        Text { Layout.fillWidth: true; text: myFileModel.count + " 个项目"; color: "#7e8794"; font.pixelSize: 11 }
+                        LineIcon { width: 15; height: 15; name: "folder"; color: "#73a8ee" }
+                        Text { Layout.fillWidth: true; text: "\u540D\u79F0"; color: "#858a95"; font.pixelSize: 11 }
                         Text { text: FileLocations.labelForUrl(nav.currentPath); color: "#6e7887"; font.pixelSize: 11; elide: Text.ElideMiddle }
                     }
                 }
             }
 
+            // Thin draggable splitter between sidebar and content.
             Rectangle {
                 id: splitter
                 Layout.fillHeight: true
@@ -164,6 +170,7 @@ Window {
                 }
             }
 
+            // Right panel: toolbar, column header, and file list.
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -185,6 +192,7 @@ Window {
                     spacing: 12
                     z: 1
 
+                    // Navigation and command toolbar.
                     RowLayout {
                         Layout.fillWidth: true
                         height: 48
@@ -255,7 +263,7 @@ Window {
                             }
                         }
                         Rectangle { width: 1; height: 22; color: "#3b3e43"; Layout.leftMargin: 5; Layout.rightMargin: 10 }
-                        Text { text: "\uE8B7"; color: "#8cb7ff"; font.family: "Segoe Fluent Icons"; font.pixelSize: 17 }
+                        LineIcon { width: 18; height: 18; name: "home"; color: "#8cb7ff" }
                         Text {
                             Layout.fillWidth: true
                             text: FileLocations.labelForUrl(nav.currentPath)
@@ -273,25 +281,25 @@ Window {
                                 Item {
                                     width: 37; height: parent.height
                                     Rectangle { anchors.fill: parent; color: listModeMouse.containsMouse ? "#41434a" : "transparent" }
-                                    Text { anchors.centerIn: parent; text: "\uE8FD"; color: "#e7e9ef"; font.family: "Segoe Fluent Icons"; font.pixelSize: 16 }
+                                    LineIcon { anchors.centerIn: parent; width: 17; height: 17; name: "list"; color: "#e7e9ef" }
                                     MouseArea { id: listModeMouse; anchors.fill: parent; hoverEnabled: true; onClicked: myFileModel.sortField = FolderListModel.Name }
                                 }
                                 Rectangle { width: 1; height: 22; y: 9; color: "#55575e" }
                                 Item {
                                     width: 37; height: parent.height
                                     Rectangle { anchors.fill: parent; color: gridModeMouse.containsMouse ? "#41434a" : "transparent" }
-                                    Text { anchors.centerIn: parent; text: "\uE80A"; color: "#e7e9ef"; font.family: "Segoe Fluent Icons"; font.pixelSize: 16 }
+                                    LineIcon { anchors.centerIn: parent; width: 17; height: 17; name: "grid"; color: "#e7e9ef" }
                                     MouseArea { id: gridModeMouse; anchors.fill: parent; hoverEnabled: true; onClicked: { } }
                                 }
                             }
                         }
                         Repeater {
-                            model: ["\uE72D", "\uE8EC", "\uE712"]
+                            model: ["share", "trash", "more"]
                             delegate: Rectangle {
                                 width: 38; height: 40; radius: 20
                                 color: actionMouse.containsMouse ? "#41434a" : "#303136"
                                 border.color: "#4d4f56"; border.width: 1
-                                Text { anchors.centerIn: parent; text: modelData; color: "#e7e9ef"; font.family: "Segoe Fluent Icons"; font.pixelSize: 16 }
+                                LineIcon { anchors.centerIn: parent; width: 17; height: 17; name: modelData; color: "#e7e9ef" }
                                 MouseArea { id: actionMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor }
                             }
                         }
@@ -301,7 +309,7 @@ Window {
                             color: "#303136"
                             border.color: searchInput.activeFocus ? "#4c9bff" : "#4d4f56"
                             border.width: 1
-                            Text { anchors.left: parent.left; anchors.leftMargin: 10; anchors.verticalCenter: parent.verticalCenter; text: "\uE721"; color: "#8e98a5"; font.family: "Segoe Fluent Icons"; font.pixelSize: 14 }
+                            LineIcon { anchors.left: parent.left; anchors.leftMargin: 10; anchors.verticalCenter: parent.verticalCenter; width: 15; height: 15; name: "search"; color: "#8e98a5" }
                             TextInput {
                                 id: searchInput
                                 anchors.left: parent.left; anchors.leftMargin: 30; anchors.right: parent.right; anchors.rightMargin: 8
@@ -316,14 +324,24 @@ Window {
                         }
                     }
 
+                    // Header mirrors FileListView's arrow/icon/name/metadata columns.
                     RowLayout {
                         Layout.fillWidth: true
+                        Layout.leftMargin: 8
+                        Layout.rightMargin: 12
                         height: 26
-                        spacing: 0
-                        Text { Layout.preferredWidth: 48; text: "" }
-                        Text { Layout.fillWidth: true; text: "名称"; color: "#858a95"; font.pixelSize: 11 }
-                        Text { Layout.preferredWidth: 110; text: "大小"; color: "#858a95"; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
-                        Text { Layout.preferredWidth: 180; text: "修改日期"; color: "#858a95"; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                        spacing: 10
+                        Item { Layout.preferredWidth: 14; Layout.preferredHeight: 18 }
+                        Item { Layout.preferredWidth: 28; Layout.preferredHeight: 28 }
+                        Item {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 18
+                            Text { anchors.fill: parent; text: "\u540D\u79F0"; color: "#858a95"; font.pixelSize: 11; verticalAlignment: Text.AlignVCenter }
+                            LineIcon { anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter; width: 14; height: 14; name: "chevron-up"; color: "#858a95" }
+                        }
+                        Text { Layout.preferredWidth: 80; text: "\u5927\u5C0F"; color: "#858a95"; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                        Text { Layout.preferredWidth: 150; text: "\u4FEE\u6539\u65E5\u671F"; color: "#858a95"; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                        Text { Layout.preferredWidth: 90; text: "\u79CD\u7C7B"; color: "#858a95"; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
                     }
 
                     FileListView {

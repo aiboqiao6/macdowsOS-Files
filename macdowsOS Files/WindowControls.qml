@@ -2,6 +2,7 @@
 // 导入Qt Quick核心模块，版本6.5
 import QtQuick 6.5
 
+// macOS-style traffic-light controls. main.qml owns the window actions.
 // 使用Row布局容器，将三个按钮水平排列
 Row {
     // 组件根元素ID，用于内部引用和外部访问
