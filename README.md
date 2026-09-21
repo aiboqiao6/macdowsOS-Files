@@ -12,6 +12,7 @@
 </div>
 
 ---
+> 由于个人精力有限且开发目标偏离 macdowsOS Files暂时暂停开发 之后会考虑重写喵
 
 ## 背景
 由于我个人觉得主题修改Windows文件资源管理器仿macOS的效果过于拉跨 所以开始制作macdowsOS Files
