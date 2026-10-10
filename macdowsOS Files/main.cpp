@@ -1,8 +1,7 @@
-#include <QGuiApplication>
+#include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQuickWindow>
-
-#include <Windows.h>
+#include <QFont>
 
 #include "FileIconProvider.h"
 
@@ -13,17 +12,9 @@
 int main(int argc, char *argv[])
 {
     qputenv("QT_QUICK_CONTROLS_STYLE", "Basic");
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
+    app.setFont(QFont(QStringLiteral("Microsoft YaHei UI"), 10));
     QQuickWindow::setDefaultAlphaBuffer(true);
-
-    MessageBoxW(nullptr,
-        L"macdowsOS Files 目前仍在早期测试中，并不代表最终成品质量。",
-        L"雾蓝回针 MistBlueSt",
-        MB_OK | MB_ICONINFORMATION);
-    MessageBoxW(nullptr,
-        L"macdowsOS Files 版本 Developer Beta 0.12",
-        L"雾蓝回针 MistBlueSt",
-        MB_OK | MB_ICONINFORMATION);
 
     QQmlApplicationEngine engine;
     // QML requests native file icons with image://file-icons/<encoded-path>.

@@ -1,119 +1,76 @@
-﻿// SidebarList.qml
 import QtQuick 6.5
 import QtQuick.Controls 6.5
 
-/* Sidebar view: C++ supplies roles; this component renders sections and rows. */
 ListView {
-    id: sidebarListView
-
-    // 暴露属性：允许父组件设置数据模型（例如 ListModel）
-    // Expose the ListView model with a descriptive property for parent QML.
-    property alias sidebarModel: sidebarListView.model
+    id: root
+    property alias sidebarModel: root.model
     property string currentPath: ""
-    // Bundled theme assets are preferred; LineIcon is the failure-safe fallback.
-    property var iconSources: ({
-        home: "qrc:/icons/home.png",
-        desktop: "qrc:/icons/desktop.png",
-        document: "qrc:/icons/documents.png",
-        download: "qrc:/icons/downloads.png",
-        picture: "qrc:/icons/pictures.png",
-        music: "qrc:/icons/music.png",
-        video: "qrc:/icons/videos.png",
-        drive: "qrc:/icons/drive.png",
-        folder: "qrc:/icons/folder.png"
-    })
-
-    function iconSource(icon) {
-        return iconSources[icon] || iconSources.folder
-    }
-
-    // Keep section labels stable even when a stale translation or old model
-    // value reaches QML. The two sidebar groups are intentionally fixed.
-    function localizedSectionTitle(value) {
-        var text = String(value).toLowerCase()
-        if (text.indexOf("location") >= 0 || text.indexOf("position") >= 0 || text.indexOf("浣") >= 0)
-            return "\u4F4D\u7F6E"
-        return "\u4E2A\u4EBA\u6536\u85CF"
-    }
-
-    // 信号：点击某项时发出，传递路径
+    property FinderTheme theme: FinderTheme {}
     signal itemClicked(string path)
-
     clip: true
-    spacing: 2
+    spacing: 1
+    boundsBehavior: Flickable.StopAtBounds
     section.property: "section"
     section.criteria: ViewSection.FullString
-    // Section headers are generated from the model's `section` role.
-    section.delegate: Text {
-        width: sidebarListView.width - 16
-        height: 27
-        leftPadding: 12
-        topPadding: 7
-        text: sidebarListView.localizedSectionTitle(section)
-        color: "#7d879c"
-        font.pixelSize: 11
-        font.weight: Font.DemiBold
-        font.letterSpacing: 0.6
+    section.delegate: Item {
+        required property string section
+        width: root.width
+        height: section.length ? 39 : 0
+        Text {
+            anchors.left: parent.left
+            anchors.leftMargin: 8
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 9
+            text: section
+            color: root.theme.mutedText
+            font.pixelSize: 12
+            font.weight: Font.DemiBold
+        }
     }
-    ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
-
-    // Each row is a navigation target; clicking emits its normalized URL.
+    ScrollBar.vertical: ScrollBar {
+        policy: ScrollBar.AsNeeded
+        width: 6
+        contentItem: Rectangle { radius: 3; color: "#666666"; opacity: parent.active ? 0.8 : 0 }
+    }
     delegate: ItemDelegate {
-        id: delegateItem
-        width: sidebarListView.width
-        height: 36
-
-        // 背景：悬停时显示暗色
+        id: entry
+        required property string name
+        required property string path
+        required property var model
+        readonly property string locationIcon: model.icon
+        width: root.width
+        height: root.theme.sidebarRowHeight
+        highlighted: path === root.currentPath
+        padding: 0
         background: Rectangle {
-            color: delegateItem.highlighted ? "#30466d" : delegateItem.hovered ? "#252d3e" : "transparent"
-            radius: 8
-            border.color: delegateItem.highlighted ? "#4c6da5" : "transparent"
-            border.width: 1
+            radius: 9
+            color: entry.highlighted ? "#454545" : entry.hovered ? "#343434" : "transparent"
+            Behavior on color { ColorAnimation { duration: 100 } }
         }
-
-        // 内容行（图标 + 文本）
-        contentItem: Row {
-            anchors.fill: parent
-            anchors.leftMargin: 12
-            spacing: 10
-
-            // Prefer imported line icons with a vector fallback.
-            Item {
-                width: 20
-                height: 20
+        contentItem: Item {
+            LineIcon {
+                anchors.left: parent.left
+                anchors.leftMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
-                Image {
-                    id: sidebarAsset
-                    anchors.fill: parent
-                    source: sidebarListView.iconSource(model.icon)
-                    sourceSize.width: 24
-                    sourceSize.height: 24
-                    fillMode: Image.PreserveAspectFit
-                    opacity: delegateItem.highlighted ? 1 : 0.9
-                }
-                LineIcon {
-                    anchors.fill: parent
-                    name: model.icon === "drive" ? "drive" : model.icon === "home" ? "home" : "folder"
-                    color: model.icon === "drive" ? "#8bc7ff" : "#d4e1fb"
-                    visible: sidebarAsset.status !== Image.Ready
-                }
+                width: 25
+                height: 25
+                name: entry.locationIcon
+                color: entry.locationIcon === "drive" ? "#ababaf" : root.theme.accent
+                strokeWidth: 1.7
             }
-
-            // 文本标签
             Text {
+                anchors.left: parent.left
+                anchors.leftMargin: 45
+                anchors.right: parent.right
+                anchors.rightMargin: 12
                 anchors.verticalCenter: parent.verticalCenter
-                text: model.name
-                color: delegateItem.highlighted ? "#f3f7ff" : "#c9d0df"
-                font.pixelSize: 13
+                text: entry.name
+                color: root.theme.text
+                font.pixelSize: 15
+                font.weight: entry.highlighted ? Font.DemiBold : Font.Normal
                 elide: Text.ElideRight
-                width: parent.width - 60   // 防止溢出
             }
         }
-
-        highlighted: model.path === sidebarListView.currentPath
-        onClicked: {
-            sidebarListView.currentPath = model.path
-            sidebarListView.itemClicked(model.path)
-        }
+        onClicked: root.itemClicked(path)
     }
 }

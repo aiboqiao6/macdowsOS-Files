@@ -29,6 +29,8 @@
     <ClCompile Include="FileLocations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FileFilterModel.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="NativeShell.cpp"><Filter>Source Files</Filter></ClCompile>
     <QtRcc Include="qml.qrc">
       <Filter>Resource Files</Filter>
     </QtRcc>
@@ -40,6 +42,8 @@
     <QtMoc Include="FileLocations.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="FileFilterModel.h"><Filter>Header Files</Filter></QtMoc>
+    <QtMoc Include="NativeShell.h"><Filter>Header Files</Filter></QtMoc>
     <None Include="WindowControls.qml">
       <Filter>Source Files</Filter>
     </None>
@@ -49,5 +53,11 @@
     <None Include="SidebarList.qml">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="LineIcon.qml"><Filter>Source Files</Filter></None>
+    <None Include="FinderTheme.qml"><Filter>Source Files</Filter></None>
+    <None Include="GlassSurface.qml"><Filter>Source Files</Filter></None>
+    <None Include="FinderButton.qml"><Filter>Source Files</Filter></None>
+    <None Include="FinderMenu.qml"><Filter>Source Files</Filter></None>
+    <None Include="FinderMenuItem.qml"><Filter>Source Files</Filter></None>
   </ItemGroup>
 </Project>

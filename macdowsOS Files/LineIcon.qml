@@ -18,6 +18,8 @@ Item {
     Canvas {
         id: iconCanvas
         anchors.fill: parent
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
 
         // Normalized geometry keeps the same drawing usable at any pixel size.
         function line(ctx, x1, y1, x2, y2) {
@@ -77,13 +79,14 @@ Item {
                 roundedRect(ctx, 0.56, 0.56, 0.28, 0.28, 0.035)
                 ctx.stroke()
             } else if (root.name === "share") {
-                line(ctx, 0.34, 0.50, 0.67, 0.28)
-                line(ctx, 0.34, 0.50, 0.67, 0.72)
-                ctx.stroke()
-                ctx.beginPath()
-                circle(ctx, 0.25, 0.50, 0.12)
-                circle(ctx, 0.75, 0.22, 0.12)
-                circle(ctx, 0.75, 0.78, 0.12)
+                line(ctx, 0.50, 0.08, 0.50, 0.60)
+                line(ctx, 0.33, 0.25, 0.50, 0.08)
+                line(ctx, 0.50, 0.08, 0.67, 0.25)
+                line(ctx, 0.28, 0.38, 0.20, 0.38)
+                line(ctx, 0.20, 0.38, 0.20, 0.87)
+                line(ctx, 0.20, 0.87, 0.80, 0.87)
+                line(ctx, 0.80, 0.87, 0.80, 0.38)
+                line(ctx, 0.80, 0.38, 0.72, 0.38)
                 ctx.stroke()
             } else if (root.name === "trash") {
                 line(ctx, 0.30, 0.30, 0.70, 0.30)
@@ -135,6 +138,99 @@ Item {
             } else if (root.name === "chevron-up") {
                 line(ctx, 0.22, 0.64, 0.50, 0.36)
                 line(ctx, 0.50, 0.36, 0.78, 0.64)
+                ctx.stroke()
+            } else if (root.name === "chevron-left") {
+                line(ctx, 0.62, 0.22, 0.36, 0.50)
+                line(ctx, 0.36, 0.50, 0.62, 0.78)
+                ctx.stroke()
+            } else if (root.name === "chevron-down") {
+                line(ctx, 0.22, 0.36, 0.50, 0.64)
+                line(ctx, 0.50, 0.64, 0.78, 0.36)
+                ctx.stroke()
+            } else if (root.name === "recent") {
+                circle(ctx, 0.50, 0.50, 0.38)
+                line(ctx, 0.50, 0.25, 0.50, 0.50)
+                line(ctx, 0.50, 0.50, 0.31, 0.50)
+                ctx.stroke()
+            } else if (root.name === "desktop") {
+                roundedRect(ctx, 0.10, 0.20, 0.80, 0.60, 0.07)
+                line(ctx, 0.10, 0.34, 0.90, 0.34)
+                ctx.stroke()
+            } else if (root.name === "document") {
+                line(ctx, 0.24, 0.10, 0.61, 0.10)
+                line(ctx, 0.61, 0.10, 0.80, 0.30)
+                line(ctx, 0.80, 0.30, 0.80, 0.90)
+                line(ctx, 0.80, 0.90, 0.24, 0.90)
+                line(ctx, 0.24, 0.90, 0.24, 0.10)
+                line(ctx, 0.61, 0.10, 0.61, 0.30)
+                line(ctx, 0.61, 0.30, 0.80, 0.30)
+                ctx.stroke()
+            } else if (root.name === "download") {
+                circle(ctx, 0.50, 0.50, 0.38)
+                line(ctx, 0.50, 0.25, 0.50, 0.69)
+                line(ctx, 0.34, 0.53, 0.50, 0.69)
+                line(ctx, 0.50, 0.69, 0.66, 0.53)
+                ctx.stroke()
+            } else if (root.name === "picture") {
+                roundedRect(ctx, 0.08, 0.16, 0.84, 0.68, 0.04)
+                circle(ctx, 0.31, 0.36, 0.07)
+                line(ctx, 0.12, 0.77, 0.39, 0.53)
+                line(ctx, 0.39, 0.53, 0.56, 0.66)
+                line(ctx, 0.56, 0.66, 0.73, 0.46)
+                line(ctx, 0.73, 0.46, 0.89, 0.65)
+                ctx.stroke()
+            } else if (root.name === "music") {
+                line(ctx, 0.40, 0.70, 0.40, 0.22)
+                line(ctx, 0.40, 0.22, 0.80, 0.12)
+                line(ctx, 0.80, 0.12, 0.80, 0.60)
+                line(ctx, 0.40, 0.36, 0.80, 0.26)
+                circle(ctx, 0.28, 0.75, 0.12)
+                circle(ctx, 0.68, 0.65, 0.12)
+                ctx.stroke()
+            } else if (root.name === "video") {
+                roundedRect(ctx, 0.08, 0.16, 0.84, 0.68, 0.04)
+                line(ctx, 0.27, 0.16, 0.27, 0.84)
+                line(ctx, 0.73, 0.16, 0.73, 0.84)
+                for (var i = 0; i < 3; ++i) {
+                    line(ctx, 0.08, 0.32 + i * 0.18, 0.27, 0.32 + i * 0.18)
+                    line(ctx, 0.73, 0.32 + i * 0.18, 0.92, 0.32 + i * 0.18)
+                }
+                ctx.stroke()
+            } else if (root.name === "people") {
+                circle(ctx, 0.36, 0.31, 0.14)
+                circle(ctx, 0.75, 0.27, 0.11)
+                ctx.moveTo(width * 0.08, height * 0.82)
+                ctx.bezierCurveTo(width * 0.08, height * 0.49, width * 0.64, height * 0.49, width * 0.64, height * 0.82)
+                ctx.closePath()
+                ctx.moveTo(width * 0.69, height * 0.56)
+                ctx.bezierCurveTo(width * 0.91, height * 0.52, width * 0.94, height * 0.65, width * 0.94, height * 0.80)
+                line(ctx, 0.94, 0.80, 0.76, 0.80)
+                ctx.stroke()
+            } else if (root.name === "preview") {
+                roundedRect(ctx, 0.10, 0.17, 0.80, 0.66, 0.04)
+                line(ctx, 0.61, 0.17, 0.61, 0.83)
+                ctx.stroke()
+            } else if (root.name === "sort") {
+                for (var j = 0; j < 3; ++j) {
+                    roundedRect(ctx, 0.12 + j * 0.28, 0.12, 0.18, 0.18, 0.02)
+                    roundedRect(ctx, 0.12 + j * 0.28, 0.43, 0.18, 0.18, 0.02)
+                }
+                line(ctx, 0.12, 0.80, 0.58, 0.80)
+                ctx.stroke()
+            } else if (root.name === "plus" || root.name === "minus" || root.name === "close") {
+                if (root.name === "close") {
+                    line(ctx, 0.25, 0.25, 0.75, 0.75)
+                    line(ctx, 0.75, 0.25, 0.25, 0.75)
+                } else {
+                    line(ctx, 0.20, 0.50, 0.80, 0.50)
+                    if (root.name === "plus") line(ctx, 0.50, 0.20, 0.50, 0.80)
+                }
+                ctx.stroke()
+            } else if (root.name === "expand") {
+                line(ctx, 0.17, 0.55, 0.17, 0.17)
+                line(ctx, 0.17, 0.17, 0.55, 0.17)
+                line(ctx, 0.83, 0.45, 0.83, 0.83)
+                line(ctx, 0.83, 0.83, 0.45, 0.83)
                 ctx.stroke()
             }
         }

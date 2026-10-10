@@ -6,6 +6,11 @@
         <file>FileListView.qml</file>
         <file>SidebarList.qml</file>
         <file>LineIcon.qml</file>
+        <file>FinderTheme.qml</file>
+        <file>GlassSurface.qml</file>
+        <file>FinderButton.qml</file>
+        <file>FinderMenu.qml</file>
+        <file>FinderMenuItem.qml</file>
     </qresource>
     <qresource prefix="/icons">
         <file alias="home.png">assets/icons/home.png</file>

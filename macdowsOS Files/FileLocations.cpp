@@ -31,11 +31,18 @@ QVariantList FileLocations::discoverLocations() const
 {
     QVariantList result;
 
+    const QString recent = recentUrl();
+    if (!recent.isEmpty())
+        result << item(QStringLiteral("\u6700\u8FD1\u4F7F\u7528"), QUrl(recent).toLocalFile(), QStringLiteral("recent"), QString());
+    const QString shared = qEnvironmentVariable("PUBLIC");
+    if (!shared.isEmpty() && QDir(shared).exists())
+        result << item(QStringLiteral("\u5171\u4EAB"), shared, QStringLiteral("people"), QString());
+
     // Personal locations come from Windows' standard user folders. Missing
     // folders are skipped so the sidebar reflects the current machine.
     const QString home = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
     if (!home.isEmpty() && QDir(home).exists())
-        result << item(tr("Home"), home, QStringLiteral("home"), QStringLiteral("\u4E2A\u4EBA\u6536\u85CF"));
+        result << item(QStringLiteral("\u4E3B\u6587\u4EF6\u5939"), home, QStringLiteral("home"), QStringLiteral("\u4E2A\u4EBA\u6536\u85CF"));
 
     const auto addFolder = [&result](const QString &name, QStandardPaths::StandardLocation location,
                                      const QString &icon) {
@@ -43,12 +50,12 @@ QVariantList FileLocations::discoverLocations() const
         if (!path.isEmpty() && QDir(path).exists())
             result << item(name, path, icon, QStringLiteral("\u4E2A\u4EBA\u6536\u85CF"));
     };
-    addFolder(tr("Desktop"), QStandardPaths::DesktopLocation, QStringLiteral("desktop"));
-    addFolder(tr("Documents"), QStandardPaths::DocumentsLocation, QStringLiteral("document"));
-    addFolder(tr("Downloads"), QStandardPaths::DownloadLocation, QStringLiteral("download"));
-    addFolder(tr("Pictures"), QStandardPaths::PicturesLocation, QStringLiteral("picture"));
-    addFolder(tr("Music"), QStandardPaths::MusicLocation, QStringLiteral("music"));
-    addFolder(tr("Videos"), QStandardPaths::MoviesLocation, QStringLiteral("video"));
+    addFolder(QStringLiteral("\u684C\u9762"), QStandardPaths::DesktopLocation, QStringLiteral("desktop"));
+    addFolder(QStringLiteral("\u6587\u7A3F"), QStandardPaths::DocumentsLocation, QStringLiteral("document"));
+    addFolder(QStringLiteral("Downloads"), QStandardPaths::DownloadLocation, QStringLiteral("download"));
+    addFolder(QStringLiteral("\u5F71\u7247"), QStandardPaths::MoviesLocation, QStringLiteral("video"));
+    addFolder(QStringLiteral("\u97F3\u4E50"), QStandardPaths::MusicLocation, QStringLiteral("music"));
+    addFolder(QStringLiteral("\u56FE\u7247"), QStandardPaths::PicturesLocation, QStringLiteral("picture"));
 
     // Volumes are discovered at runtime instead of being hard-coded. This
     // keeps USB and secondary drives in sync with the Windows file manager.
@@ -127,8 +134,29 @@ QString FileLocations::normalizeFolder(const QString &value) const
     return QUrl::fromLocalFile(info.absoluteFilePath()).toString();
 }
 
+QString FileLocations::recentUrl() const
+{
+    const QString roaming = qEnvironmentVariable("APPDATA");
+    return roaming.isEmpty() ? QString() : normalizeFolder(roaming + QStringLiteral("/Microsoft/Windows/Recent"));
+}
+
+QString FileLocations::parentFolder(const QString &value) const
+{
+    const QString normalized = normalizeFolder(value);
+    if (normalized.isEmpty()) return {};
+    QDir directory(QUrl(normalized).toLocalFile());
+    if (!directory.cdUp()) return normalized;
+    return QUrl::fromLocalFile(directory.absolutePath()).toString();
+}
+
 QString FileLocations::labelForUrl(const QUrl &url) const
 {
+    const QString normalized = normalizeFolder(url.toString());
+    for (const QVariant &location : m_locations) {
+        const QVariantMap values = location.toMap();
+        if (values.value(QStringLiteral("path")).toString() == normalized)
+            return values.value(QStringLiteral("name")).toString();
+    }
     const QFileInfo info(url.toLocalFile());
     if (info.fileName().isEmpty()) return QDir::toNativeSeparators(info.absoluteFilePath());
     return info.fileName();

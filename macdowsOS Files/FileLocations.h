@@ -23,6 +23,8 @@ public:
     // QML-facing helpers used by navigation and the context menu.
     Q_INVOKABLE QVariantList sidebarLocations() const;
     Q_INVOKABLE QString homeUrl() const;
+    Q_INVOKABLE QString recentUrl() const;
+    Q_INVOKABLE QString parentFolder(const QString &value) const;
     Q_INVOKABLE QString normalizeFolder(const QString &value) const;
     Q_INVOKABLE QString labelForUrl(const QUrl &url) const;
     Q_INVOKABLE void copyToClipboard(const QString &text) const;
