@@ -7,6 +7,7 @@ Item {
     id: root
     property var fileModel
     property var sourceModel
+    required property var nativeShell
     property string currentFolder: ""
     property string searchText: ""
     property FinderTheme theme: FinderTheme {}
@@ -87,7 +88,7 @@ Item {
         showNativeMenu(root, 32, y, selectedPath === "")
     }
     function showNativeMenu(anchor, x, y, background) {
-        NativeShell.showContextMenu(background ? currentFolder : selectedPath, anchor, x, y, background)
+        nativeShell.showContextMenu(background ? currentFolder : selectedPath, anchor, x, y, background)
     }
     function moveSelection(amount) {
         if (!count) return

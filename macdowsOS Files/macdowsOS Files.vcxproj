@@ -104,10 +104,14 @@
     <ClCompile Include="FileFilterModel.cpp" />
     <ClCompile Include="NativeShell.cpp" />
     <ClCompile Include="FileIconProvider.cpp" />
+    <ClCompile Include="WindowManager.cpp" />
+    <ClCompile Include="WindowsIntegration.cpp" />
     <ClInclude Include="FileIconProvider.h" />
     <QtMoc Include="FileLocations.h" />
     <QtMoc Include="FileFilterModel.h" />
     <QtMoc Include="NativeShell.h" />
+    <QtMoc Include="WindowManager.h" />
+    <QtMoc Include="WindowsIntegration.h" />
     <None Include="..\LICENSE" />
     <None Include="..\README.md" />
     <None Include="FileListView.qml" />

@@ -17,6 +17,10 @@ Window {
     title: FileLocations.labelForUrl(nav.currentPath) + " — macdowsOS Files"
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint | Qt.WindowMinMaxButtonsHint
+    property string initialPath: FileLocations.homeUrl()
+    NativeShellBackend { id: shell }
+    onClosing: WindowManager.releaseWindow(window)
+    onActiveChanged: if (active) WindowsIntegration.refresh()
     property int sidebarWidth: 230
     property bool previewRequested: true
     property bool searchExpanded: false
@@ -30,7 +34,7 @@ Window {
     }
     FinderTheme { id: theme }
     readonly property int windowCornerRadius: theme.cornerRadius
-    onSidebarWidthChanged: NativeShell.attachWindow(window)
+    onSidebarWidthChanged: shell.attachWindow(window)
 
     QtObject {
         id: nav
@@ -40,7 +44,7 @@ Window {
         function setCurrent(path) {
             currentPath = path
             files.clearSelection()
-            pathInput.text = path
+            pathInput.text = FileLocations.nativePath(path)
             searchInput.text = ""
         }
         function navigateTo(path, push) {
@@ -80,6 +84,8 @@ Window {
     Shortcut { sequence: "Alt+Left"; onActivated: nav.goBack() }
     Shortcut { sequence: "Alt+Right"; onActivated: nav.goForward() }
     Shortcut { sequence: "Alt+Up"; onActivated: nav.goUp() }
+    Shortcut { sequence: "Ctrl+N"; onActivated: WindowManager.openWindow(nav.currentPath) }
+    Shortcut { sequence: "Ctrl+W"; onActivated: window.close() }
     Shortcut { sequence: "Ctrl+L"; onActivated: { pathInput.forceActiveFocus(); pathInput.selectAll() } }
     Shortcut { sequence: "Ctrl+F"; onActivated: { window.searchExpanded = true; searchInput.forceActiveFocus() } }
     Shortcut { sequence: "F5"; onActivated: filteredModel.refresh() }
@@ -101,7 +107,7 @@ Window {
         id: frame
         anchors.fill: parent
         radius: windowMask.radius
-        color: NativeShell.backdropAvailable ? "transparent" : theme.window
+        color: shell.backdropAvailable ? "transparent" : theme.window
         layer.enabled: true
         layer.effect: MultiEffect { maskEnabled: true; maskSource: windowMask }
 
@@ -109,14 +115,14 @@ Window {
             id: sidebarPanel
             width: window.sidebarWidth
             height: parent.height
-            color: NativeShell.backdropAvailable ? theme.sidebarGlass : theme.sidebar
+            color: shell.backdropAvailable ? theme.sidebarGlass : theme.sidebar
             gradient: Gradient {
-                GradientStop { position: 0; color: NativeShell.backdropAvailable && window.visibility === Window.Maximized ? theme.sidebarGlass : theme.sidebar }
-                GradientStop { position: window.visibility === Window.Maximized ? 0 : theme.cornerRadius / sidebarPanel.height; color: NativeShell.backdropAvailable ? (window.visibility === Window.Maximized ? theme.sidebarGlass : theme.sidebar) : theme.sidebar }
-                GradientStop { position: (theme.cornerRadius + 32) / sidebarPanel.height; color: NativeShell.backdropAvailable ? theme.sidebarGlass : theme.sidebar }
-                GradientStop { position: 1 - (theme.cornerRadius + 32) / sidebarPanel.height; color: NativeShell.backdropAvailable ? theme.sidebarGlass : theme.sidebar }
-                GradientStop { position: window.visibility === Window.Maximized ? 1 : 1 - theme.cornerRadius / sidebarPanel.height; color: NativeShell.backdropAvailable ? (window.visibility === Window.Maximized ? theme.sidebarGlass : theme.sidebar) : theme.sidebar }
-                GradientStop { position: 1; color: NativeShell.backdropAvailable && window.visibility === Window.Maximized ? theme.sidebarGlass : theme.sidebar }
+                GradientStop { position: 0; color: shell.backdropAvailable && window.visibility === Window.Maximized ? theme.sidebarGlass : theme.sidebar }
+                GradientStop { position: window.visibility === Window.Maximized ? 0 : theme.cornerRadius / sidebarPanel.height; color: shell.backdropAvailable ? (window.visibility === Window.Maximized ? theme.sidebarGlass : theme.sidebar) : theme.sidebar }
+                GradientStop { position: (theme.cornerRadius + 32) / sidebarPanel.height; color: shell.backdropAvailable ? theme.sidebarGlass : theme.sidebar }
+                GradientStop { position: 1 - (theme.cornerRadius + 32) / sidebarPanel.height; color: shell.backdropAvailable ? theme.sidebarGlass : theme.sidebar }
+                GradientStop { position: window.visibility === Window.Maximized ? 1 : 1 - theme.cornerRadius / sidebarPanel.height; color: shell.backdropAvailable ? (window.visibility === Window.Maximized ? theme.sidebarGlass : theme.sidebar) : theme.sidebar }
+                GradientStop { position: 1; color: shell.backdropAvailable && window.visibility === Window.Maximized ? theme.sidebarGlass : theme.sidebar }
             }
             MouseArea { width: parent.width; height: theme.toolbarHeight; onPressed: window.startSystemMove(); onDoubleClicked: window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized() }
             WindowControls {
@@ -221,6 +227,7 @@ Window {
                         }
                         FinderMenu {
                             id: optionsMenu
+                            FinderMenuItem { text: "新建窗口 (Ctrl+N)"; onTriggered: WindowManager.openWindow(nav.currentPath) }
                             FinderMenuItem { text: "前往上一级 (Alt+↑)"; onTriggered: nav.goUp() }
                             FinderMenuItem { text: "在资源管理器中打开"; onTriggered: FileLocations.revealInFileManager(nav.currentPath) }
                             FinderMenuItem { text: "复制当前文件夹路径"; onTriggered: FileLocations.copyToClipboard(nav.currentPath) }
@@ -228,6 +235,29 @@ Window {
                             MenuSeparator { contentItem: Rectangle { implicitHeight: 1; color: "#555555" } }
                             FinderMenuItem { text: "显示隐藏文件"; checkable: true; checked: folderModel.showHidden; onTriggered: folderModel.showHidden = !folderModel.showHidden }
                             FinderMenuItem { text: "显示状态栏"; checkable: true; checked: window.statusBarVisible; onTriggered: window.statusBarVisible = !window.statusBarVisible }
+                            MenuSeparator { contentItem: Rectangle { implicitHeight: 1; color: "#555555" } }
+                            FinderMenuItem {
+                                text: WindowsIntegration.enabled ? "已接管文件夹和磁盘打开" : "设为默认文件管理器（文件夹和磁盘）"
+                                checkable: true
+                                checked: WindowsIntegration.enabled
+                                enabled: !WindowsIntegration.canRestore || WindowsIntegration.enabled
+                                onTriggered: {
+                                    if (!WindowsIntegration.setEnabled(!WindowsIntegration.enabled)) {
+                                        operationDialog.message = WindowsIntegration.lastError
+                                        operationDialog.open()
+                                    }
+                                }
+                            }
+                            FinderMenuItem {
+                                text: "恢复原来的默认文件管理器"
+                                enabled: WindowsIntegration.canRestore
+                                onTriggered: {
+                                    if (!WindowsIntegration.setEnabled(false)) {
+                                        operationDialog.message = WindowsIntegration.lastError
+                                        operationDialog.open()
+                                    }
+                                }
+                            }
                         }
                     }
                     GlassSurface {
@@ -265,20 +295,9 @@ Window {
                 height: 48
                 GlassSurface {
                     x: 10; y: 2
-                    width: parent.width - 20
+                    width: parent.width - 62
                     height: 32
                     highlighted: pathInput.activeFocus
-                    Text {
-                        anchors.centerIn: parent
-                        width: parent.width - 44
-                        text: FileLocations.labelForUrl(nav.currentPath)
-                        color: "#c1c1c1"
-                        font.pixelSize: 12
-                        font.weight: Font.DemiBold
-                        horizontalAlignment: Text.AlignHCenter
-                        elide: Text.ElideMiddle
-                        visible: !pathInput.activeFocus
-                    }
                     TextInput {
                         id: pathInput
                         objectName: "pathInput"
@@ -286,19 +305,38 @@ Window {
                         anchors.leftMargin: 16
                         anchors.rightMargin: 16
                         verticalAlignment: TextInput.AlignVCenter
-                        color: activeFocus ? theme.text : "transparent"
+                        color: pathValid ? theme.text : "#ff8c83"
+                        property bool pathValid: true
                         selectionColor: theme.selection
                         font.pixelSize: 12
                         selectByMouse: true
                         clip: true
                         onAccepted: {
-                            if (nav.navigateTo(text)) { pathInput.color = Qt.binding(function() { return pathInput.activeFocus ? theme.text : "transparent" }); files.forceActiveFocus() }
-                            else color = "#ff8c83"
+                            if (nav.navigateTo(text)) { pathValid = true; files.forceActiveFocus() }
+                            else pathValid = false
                         }
-                        Keys.onEscapePressed: { text = nav.currentPath; color = Qt.binding(function() { return pathInput.activeFocus ? theme.text : "transparent" }); files.forceActiveFocus() }
-                        onActiveFocusChanged: if (activeFocus) { text = nav.currentPath; selectAll() }
+                        Keys.onEscapePressed: { text = FileLocations.nativePath(nav.currentPath); pathValid = true; files.forceActiveFocus() }
+                        onActiveFocusChanged: {
+                            text = FileLocations.nativePath(nav.currentPath)
+                            pathValid = true
+                            if (activeFocus) selectAll()
+                            else cursorPosition = 0
+                        }
+                        onTextEdited: pathValid = true
                         Accessible.name: "文件夹路径"
                     }
+                }
+                FinderButton {
+                    objectName: "newWindowButton"
+                    anchors.right: parent.right
+                    anchors.rightMargin: 10
+                    y: 2
+                    width: 32
+                    height: 32
+                    iconName: "plus"
+                    tooltip: "新建窗口 (Ctrl+N)"
+                    Accessible.name: "新建窗口"
+                    onClicked: WindowManager.openWindow(nav.currentPath)
                 }
             }
             Rectangle {
@@ -312,6 +350,7 @@ Window {
                     anchors.top: parent.top
                     anchors.bottom: statusBar.top
                     width: parent.width - (window.previewVisible ? preview.width : 0)
+                    nativeShell: shell
                     fileModel: filteredModel
                     sourceModel: folderModel
                     currentFolder: nav.currentPath
@@ -393,7 +432,7 @@ Window {
         Rectangle { anchors.fill: parent; visible: window.visibility !== Window.Maximized; radius: frame.radius; color: "transparent"; border.color: "#494949"; border.width: 1 }
     }
     Connections {
-        target: NativeShell
+        target: shell
         function onRenameRequested(path, name) {
             renameDialog.targetPath = path
             renameInput.text = name
@@ -429,7 +468,7 @@ Window {
             onAccepted: renameDialog.accept()
         }
         onAccepted: {
-            if (!NativeShell.renameItem(targetPath, renameInput.text)) {
+            if (!shell.renameItem(targetPath, renameInput.text)) {
                 operationDialog.message = "无法重命名该项目。请检查名称和文件权限。"
                 operationDialog.open()
             }
@@ -451,8 +490,8 @@ Window {
         contentItem: Text { text: operationDialog.message; wrapMode: Text.Wrap; color: theme.text; font.pixelSize: 13 }
     }
     Component.onCompleted: {
-        NativeShell.attachWindow(window)
-        nav.navigateTo(FileLocations.homeUrl())
+        shell.attachWindow(window)
+        nav.navigateTo(initialPath)
     }
 
     // Edge and corner targets retain native resizing for the frameless window.

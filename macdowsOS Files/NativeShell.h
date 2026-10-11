@@ -11,7 +11,7 @@ struct IContextMenu2;
 struct IContextMenu3;
 
 // Windows composition and Shell menus stay on the GUI/COM apartment thread.
-class NativeShell final : public QObject, public QAbstractNativeEventFilter
+class NativeShell : public QObject, public QAbstractNativeEventFilter
 {
     Q_OBJECT
     Q_PROPERTY(bool backdropAvailable READ backdropAvailable NOTIFY backdropAvailableChanged)

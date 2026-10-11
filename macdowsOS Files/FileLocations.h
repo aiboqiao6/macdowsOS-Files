@@ -26,6 +26,7 @@ public:
     Q_INVOKABLE QString recentUrl() const;
     Q_INVOKABLE QString parentFolder(const QString &value) const;
     Q_INVOKABLE QString normalizeFolder(const QString &value) const;
+    Q_INVOKABLE QString nativePath(const QString &value) const;
     Q_INVOKABLE QString labelForUrl(const QUrl &url) const;
     Q_INVOKABLE void copyToClipboard(const QString &text) const;
     Q_INVOKABLE bool revealInFileManager(const QString &value) const;

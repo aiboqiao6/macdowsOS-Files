@@ -31,6 +31,8 @@
     </ClCompile>
     <ClCompile Include="FileFilterModel.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="NativeShell.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="WindowManager.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="WindowsIntegration.cpp"><Filter>Source Files</Filter></ClCompile>
     <QtRcc Include="qml.qrc">
       <Filter>Resource Files</Filter>
     </QtRcc>
@@ -44,6 +46,8 @@
     </QtMoc>
     <QtMoc Include="FileFilterModel.h"><Filter>Header Files</Filter></QtMoc>
     <QtMoc Include="NativeShell.h"><Filter>Header Files</Filter></QtMoc>
+    <QtMoc Include="WindowManager.h"><Filter>Header Files</Filter></QtMoc>
+    <QtMoc Include="WindowsIntegration.h"><Filter>Header Files</Filter></QtMoc>
     <None Include="WindowControls.qml">
       <Filter>Source Files</Filter>
     </None>

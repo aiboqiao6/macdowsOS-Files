@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Qt/Visual Studio QML edit-and-continue cache
+enc_temp_folder/

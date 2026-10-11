@@ -598,6 +598,6 @@ bool NativeShell::renameItem(const QString &value, const QString &newName)
     return SUCCEEDED(completed) && !aborted;
 }
 
-static const int nativeShellRegistration = qmlRegisterSingletonType<NativeShell>(
-    "macdowsOS.Locations", 1, 0, "NativeShell",
-    [](QQmlEngine *, QJSEngine *) -> QObject * { return new NativeShell; });
+// Each browser window owns its compositor surfaces and Shell operation signals.
+static const int nativeShellRegistration = qmlRegisterType<NativeShell>(
+    "macdowsOS.Locations", 1, 0, "NativeShellBackend");

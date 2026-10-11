@@ -6,7 +6,8 @@
 main.cpp
   -> QQmlApplicationEngine
   -> registers FileIconProvider (image://file-icons)
-  -> loads qrc:/qt/qml/macdowsos files/main.qml
+  -> WindowManager creates one main.qml instance per window
+  -> WindowsIntegration manages per-user folder/drive default verbs
 
 main.qml
   -> nav: current folder and back/forward history
@@ -41,7 +42,7 @@ qml.qrc + assets/icons
 
 1. `main.cpp` creates `QApplication` and configures the Qt Quick Controls style. Qt Widgets supplies the Shell menu presentation; the main window remains Qt Quick.
 2. The native `file-icons` image provider is registered with the QML engine.
-3. `main.qml` loads the window, creates the navigation object, and points `FolderListModel` at the home directory.
+3. `WindowManager` creates `main.qml` with an initial folder from `--open`, positional arguments, or the home directory. Each window owns a `NativeShellBackend`, navigation object, folder/filter model, selection, and view state.
 4. `FileLocations` discovers standard user folders and mounted drives for the sidebar.
 5. The current path is pushed into `FolderListModel.folder`; `FileFilterModel` preserves its roles and exposes matching rows to both views.
 
@@ -64,6 +65,8 @@ qml.qrc + assets/icons
 | File | Responsibility |
 | --- | --- |
 | `main.cpp` | Qt application bootstrap and QML registration |
+| `WindowManager.h/.cpp` | Creates independent QML windows, destroys closed windows, and quits after the last browser closes |
+| `WindowsIntegration.h/.cpp` | Backs up/restores per-user Directory/Drive default Shell verbs and registers the executable command |
 | `main.qml` | Window shell, navigation state, toolbar, and layout |
 | `FileLocations.h/.cpp` | Sidebar model and native filesystem helpers |
 | `FileFilterModel.h/.cpp` | Search proxy, role lookup, item count, and refresh |
@@ -84,6 +87,7 @@ qml.qrc + assets/icons
 | --- | --- |
 | Alt+Left / Alt+Right / Alt+Up | Back / forward / parent folder |
 | Ctrl+L / Ctrl+F | Edit folder path / search current folder |
+| Ctrl+N / Ctrl+W | New independent window at the current folder / close current window |
 | Ctrl+1 / Ctrl+2 | Icon / list view |
 | Ctrl+Shift+P | Toggle preview at supported window widths |
 | F5 | Refresh |
@@ -103,3 +107,9 @@ File context menus read the Windows Shell's classic `IContextMenu` API, includin
 The Home icon uses the same blue accent as the other personal folder icons in both the sidebar and current-location toolbar. The view/sort/options controls remain application menus because they operate on this app's view state.
 
 Each surface has one outer contour. The main window draws one QML border at the same 24px radius as its masks. Shell popup menus omit their Qt outer border/radius when DWM owns their contour. Glass capsules use one border, embedded toolbar buttons use a borderless state fill, and traffic-light controls use only their outer border.
+
+Each main window creates its own `NativeShellBackend`; compositor companions, HWND event routing, COM menus, rename signals, and errors belong to that window. `WindowManager` queues deletion after close handling and explicitly quits after the last browser window, regardless of companion windows.
+
+Navigation models retain file URLs internally. `FileLocations.nativePath()` converts them to native Windows paths for the always-visible address editor; URL inputs still normalize through the filesystem adapter.
+
+`WindowsIntegration` registers a dedicated `macdowsOSFiles` verb beneath `HKCU\Software\Classes\Directory\shell` and `Drive\shell`, then makes it the default. It persists each prior default value's presence, raw bytes, and registry type before changing either association, rolls back failed installs, and restores only defaults that still name its verb. A newer default set by another application is preserved. An existing foreign handler key prevents installation. The quoted executable command passes `--open "%1/"`; the trailing slash prevents a drive root's backslash from escaping the closing quote during Windows argv parsing. Restoration state persists across process restarts. Win+E and virtual Shell namespaces are outside this integration's scope.

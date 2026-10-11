@@ -1,7 +1,6 @@
 ﻿#include "FileLocations.h"
 
 #include <QDir>
-#include <QDesktopServices>
 #include <QFileInfo>
 #include <QGuiApplication>
 #include <QClipboard>
@@ -9,6 +8,7 @@
 #include <QJSEngine>
 #include <QStandardPaths>
 #include <QStorageInfo>
+#include <QProcess>
 
 namespace {
 // Keep each sidebar entry in one QVariantMap so the C++ model and QML
@@ -140,6 +140,12 @@ QString FileLocations::recentUrl() const
     return roaming.isEmpty() ? QString() : normalizeFolder(roaming + QStringLiteral("/Microsoft/Windows/Recent"));
 }
 
+QString FileLocations::nativePath(const QString &value) const
+{
+    const QUrl url(value);
+    return QDir::toNativeSeparators(url.isLocalFile() ? url.toLocalFile() : value);
+}
+
 QString FileLocations::parentFolder(const QString &value) const
 {
     const QString normalized = normalizeFolder(value);
@@ -187,7 +193,9 @@ bool FileLocations::revealInFileManager(const QString &value) const
     // Explorer opens the directory itself for folders and the containing
     // directory for regular files.
     const QString folder = info.isDir() ? info.absoluteFilePath() : info.absolutePath();
-    return QDesktopServices::openUrl(QUrl::fromLocalFile(folder));
+    // Launch Explorer explicitly: the default folder verb may point back to us.
+    const QString explorer = qEnvironmentVariable("WINDIR") + QStringLiteral("/explorer.exe");
+    return QProcess::startDetached(explorer, {QDir::toNativeSeparators(folder)});
 }
 
 // Register once during static initialization so every QML component can use
