@@ -6,8 +6,7 @@
 
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D4?style=flat-square&logo=windows)](https://github.com/aiboqiao6/macdowsOS-Files)
 [![Language](https://img.shields.io/badge/Language-C%2B%2B-00599C?style=flat-square&logo=cplusplus)](https://github.com/aiboqiao6/macdowsOS-Files)
-[![Framework](https://img.shields.io/badge/Framework-Qt%206%20Quick-41CD52?style=flat-square&logo=qt)](https://github.com/aiboqiao6/
-OS-Files)
+[![Framework](https://img.shields.io/badge/Framework-Qt%206%20Quick-41CD52?style=flat-square&logo=qt)](https://github.com/aiboqiao6/macdowsOS-Files)
 [![Release](https://img.shields.io/badge/Release-0.12-F5A623?style=flat-square)](https://github.com/aiboqiao6/macdowsOS-Files/releases)
 
 </div>
